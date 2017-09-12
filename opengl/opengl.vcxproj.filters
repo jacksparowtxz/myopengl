@@ -21,5 +21,36 @@
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="getimage.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="shader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="stb_image.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="face.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="wall.jpg">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="blood.jpg">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="soul.jpg">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="soul3.jpeg">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="SOUL4.png">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
 </Project>
