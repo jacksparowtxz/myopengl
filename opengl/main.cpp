@@ -348,7 +348,7 @@ int main()
 	glUniform1i(glGetUniformLocation(ourShader.ID, "texture1"), 0);
 	// or set it via the texture class
 	ourShader.setInt("texture2", 1);
-
+	ourShader.setUniformBlock();
 
 
 	// render loop

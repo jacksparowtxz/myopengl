@@ -5,7 +5,7 @@
 #define SHADER_H
 
 #include <glad/glad.h>
-
+#include <GLFW/glfw3.h>
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -73,6 +73,47 @@ public:
 		glDeleteShader(vertex);
 		glDeleteShader(fragment);
 	}
+	size_t TypeSize(GLenum type)
+	{
+		size_t size;
+#define CASE(Enum,Count,Type)\
+        case Enum :size=Count*sizeof(Type);break
+
+		switch (type)
+		{
+			CASE(GL_FLOAT, 1, GLfloat);
+			CASE(GL_FLOAT_VEC2, 2, GLfloat);
+			CASE(GL_FLOAT_VEC3, 3, GLfloat);
+			CASE(GL_FLOAT_VEC4, 4, GLfloat);
+			CASE(GL_INT, 1, GLint);
+			CASE(GL_INT_VEC2, 2, GLint);
+			CASE(GL_INT_VEC3, 3, GLint);
+			CASE(GL_INT_VEC4, 4, GLint);
+			CASE(GL_UNSIGNED_INT, 1, GLuint);
+			CASE(GL_UNSIGNED_INT_VEC2, 2, GLuint);
+			CASE(GL_UNSIGNED_INT_VEC3, 3, GLuint);
+			CASE(GL_UNSIGNED_INT_VEC4, 4, GLuint);
+			CASE(GL_BOOL, 1, GLboolean);
+			CASE(GL_BOOL_VEC2, 2, GLboolean);
+			CASE(GL_BOOL_VEC3, 3, GLboolean);
+			CASE(GL_BOOL_VEC4, 4, GLboolean);
+			CASE(GL_FLOAT_MAT2, 4, GLfloat);
+			CASE(GL_FLOAT_MAT2x3, 6, GLfloat);
+			CASE(GL_FLOAT_MAT2x4, 8, GLfloat);
+			CASE(GL_FLOAT_MAT3, 9, GLfloat);
+			CASE(GL_FLOAT_MAT3x2, 6, GLfloat);
+			CASE(GL_FLOAT_MAT3x4, 12, GLfloat);
+			CASE(GL_FLOAT_MAT4, 16, GLfloat);
+			CASE(GL_FLOAT_MAT4x2, 8, GLfloat);
+			CASE(GL_FLOAT_MAT4x3, 12, GLfloat);
+#undef CASE
+		default:
+			std::cout << stderr << "UNKONW" << type;
+			exit(EXIT_FAILURE);
+			break;
+		}
+		return size;
+	}
 	// activate the shader
 	// ------------------------------------------------------------------------
 	void use()
@@ -94,6 +135,52 @@ public:
 	void setFloat(const std::string &name, float value) const
 	{
 		glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
+	}
+	void setUniformBlock()
+	{
+		const GLchar *name="BlobSettings";
+		GLuint blockIndex = glGetUniformBlockIndex(ID,
+			"BlobSettings");
+		GLint blockSize;
+		glGetActiveUniformBlockiv(ID,
+			blockIndex,
+			GL_UNIFORM_BLOCK_DATA_SIZE,
+			&blockSize);
+		GLubyte *blockBuffer = (GLubyte*)malloc(blockSize);
+		if (blockBuffer==nullptr)
+		{
+			std::cout << "fail to allocate buffer";
+		}
+		//Query for the offsets of the each block variable  
+		//layout of the data within a uniform block is implementation dependent  
+		const GLchar *names[] = { "InnerColor","OuterColor",
+			"RadiusInner","RadiusOuter" };
+		GLuint indices[4];
+		glGetUniformIndices(ID, 4, names, indices);
+
+		GLint offset[4];
+		glGetActiveUniformsiv(ID, 4, indices, GL_UNIFORM_OFFSET, offset);
+
+		GLfloat outerColor[] = { 5.0f, 5.0f, 5.0f,5.0f };
+		GLfloat innerColor[] = { 1.0f, 1.0f, 0.75f, 1.0f };
+		GLfloat innerRadius = 5.25f, outerRadius = 5.45f;
+
+		memcpy(blockBuffer + offset[0], innerColor, 4 * sizeof(GLfloat));
+		memcpy(blockBuffer + offset[1], outerColor, 4 * sizeof(GLfloat));
+		memcpy(blockBuffer + offset[2], &innerRadius, sizeof(GLfloat));
+		memcpy(blockBuffer + offset[3], &outerRadius, sizeof(GLfloat));
+
+		//create OpenGL buffer UBO to store the data  
+		GLuint uboHandle;
+		glGenBuffers(1, &uboHandle);
+		glBindBuffer(GL_UNIFORM_BUFFER, uboHandle);
+		glBufferData(GL_UNIFORM_BUFFER, blockSize, blockBuffer,
+			GL_DYNAMIC_DRAW);
+
+		//bind the UBO th the uniform block  
+		glBindBufferBase(GL_UNIFORM_BUFFER, blockIndex, uboHandle);
+
+		free(blockBuffer);
 	}
 
 private:
